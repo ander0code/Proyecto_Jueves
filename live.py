@@ -75,25 +75,6 @@ def bloquear_nodos_aleatoriamente(graph, num_nodos):
         graph.remove_node(nodo)
     return graph, nodos_bloqueados
 
-def mostrar_metricas(datos_simulacion):
-    # Crear una nueva ventana de tkinter
-    ventana_metricas = tk.Tk()
-    ventana_metricas.title("Métricas de la Simulación")
-
-    # Crear un Treeview para mostrar los datos de la simulación
-    tree = ttk.Treeview(ventana_metricas, columns=("Paso", "Posición Inicial", "Nueva Posición", "Velocidad"), show='headings')
-    tree.heading("Paso", text="Paso")
-    tree.heading("Posición Inicial", text="Posición Inicial")
-    tree.heading("Nueva Posición", text="Nueva Posición")
-    tree.heading("Velocidad", text="Velocidad")
-
-    # Insertar los datos de la simulación en el Treeview
-    for datos in datos_simulacion:
-        tree.insert("", "end", values=(datos['paso'], datos['posicion_inicial'], datos['nueva_posicion'], round(datos['velocidad'], 3)))
-
-    tree.pack(expand=True, fill='both')
-    ventana_metricas.mainloop()
-
 def actualizar_grafico(num, graph, ax, camino, datos_simulacion):
     ax.clear()
     pos = nx.get_node_attributes(graph, 'pos')
@@ -101,8 +82,9 @@ def actualizar_grafico(num, graph, ax, camino, datos_simulacion):
     
     edge_labels = {}
     for datos in datos_simulacion:
-        if datos['mostrar']:
+        if datos['paso'] <= num:
             edge_labels[(datos['posicion_inicial'], datos['nueva_posicion'])] = datos['velocidad']
+            datos['mostrar'] = True  # Mostrar la velocidad después de que el punto rojo haya pasado
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, ax=ax)
     
     path_edges = list(zip(camino, camino[1:]))
@@ -113,10 +95,9 @@ def actualizar_grafico(num, graph, ax, camino, datos_simulacion):
     ax.set_title(f"Esquema del Grafo del Hospital - Paso {num+1}")
 
 def simular_movimiento(graph, camino, ax, datos_simulacion):
-    fig, ax = plt.subplots(figsize=(15, 10))
-    ani = animation.FuncAnimation(fig, actualizar_grafico, frames=len(camino), fargs=(graph, ax, camino, datos_simulacion), interval=1000, repeat=False)
-    plt.show()
-    mostrar_metricas(datos_simulacion)
+    anim = animation.FuncAnimation(plt.gcf(), actualizar_grafico, frames=len(camino), fargs=(graph, ax, camino, datos_simulacion), interval=2000, repeat=False)  # Intervalo de 2000 ms (2 segundos)
+    plt.show(block=True)  # Mantener el gráfico abierto
+    return anim  # Retornar la animación para que no sea eliminada
 
 def main():
     plt.ion()  # Habilitar modo interactivo
@@ -151,7 +132,7 @@ def main():
     graph, shortest_path, datos_simulacion = recalibrate_graph(graph, nodos_bloqueados)
     if shortest_path:
         print(f"Camino más corto: {shortest_path}")
-        simular_movimiento(graph, shortest_path, ax, datos_simulacion)  # Simular el movimiento a lo largo del camino más corto
+        anim = simular_movimiento(graph, shortest_path, ax, datos_simulacion)  # Simular el movimiento a lo largo del camino más corto
 
 if __name__ == "__main__":
     main()
