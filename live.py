@@ -1,5 +1,6 @@
 import threading
 import time
+from resultados import mostrar_metricas
 import networkx as nx
 import matplotlib.pyplot as plt
 from edificio import Esquema_grafo_hospital  # Importar el grafo del hospital
@@ -9,6 +10,7 @@ import random
 from camino_mas_corto import calcular_camino_mas_corto  # Importar la función para calcular el camino más corto
 from tkinter import ttk  # Importar ttk para widgets de tkinter
 import matplotlib.animation as animation  # Importar para la animación
+from simulacion import simular_dinamica_particula
 
 def recalibrate_graph(graph, nodos_bloqueados):
     print("Recalibrando el grafo y buscando el camino más corto...")
@@ -18,7 +20,13 @@ def recalibrate_graph(graph, nodos_bloqueados):
         # Asegurarse de que todos los pesos de las aristas comiencen en cero
         for u, v, data in graph.edges(data=True):
             data['weight'] = 0
-        graph, datos_simulacion = simular_dinamica_particula(graph, shortest_path, velocidad_inicial=0.0, probabilidad_de_parar=0.1, tiempo_de_parada=2)
+        graph, datos_simulacion = simular_dinamica_particula(
+            graph, 
+            shortest_path, 
+            velocidad_inicial=0.0, 
+            probabilidad_de_parar=0.1, 
+            tiempo_de_parada=2
+        )
     return graph, shortest_path, datos_simulacion
 
 def introducir_obstaculos(graph, probabilidad_de_obstaculo=0.1):
@@ -133,6 +141,10 @@ def main():
     if shortest_path:
         print(f"Camino más corto: {shortest_path}")
         anim = simular_movimiento(graph, shortest_path, ax, datos_simulacion)  # Simular el movimiento a lo largo del camino más corto
+
+        # Mostrar las métricas después de la simulación
+        if datos_simulacion:
+            mostrar_metricas(datos_simulacion)
 
 if __name__ == "__main__":
     main()
