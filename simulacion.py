@@ -13,29 +13,25 @@ def simular_dinamica_particula(graph, ruta, velocidad_inicial=0.0, probabilidad_
     velocidad = velocidad_inicial
     datos_simulacion = []
 
-    pos = nx.get_node_attributes(graph, 'pos')  # Obtener posiciones para cálculo de distancias
+    pos = nx.get_node_attributes(graph, 'pos')  
 
     for paso in range(1, len(ruta)):
         nueva_posicion = ruta[paso]
         distancia = calcular_distancia(posicion_inicial, nueva_posicion, pos)
         
-        # Asignar velocidad aleatoria y calcular tiempo
         velocidad = round(random.uniform(1.0, 5.0), 3)
         tiempo = distancia / velocidad
 
-        # Calcular energía cinética
         energia_cinetica = 0.5 * masa * (velocidad**2)
 
-        # Simular probabilidad de detenerse
         if random.random() < probabilidad_de_parar:
-            velocidad = 0  # Detenerse
+            velocidad = 0  
             time.sleep(tiempo_de_parada)
-            velocidad = round(random.uniform(1.0, 5.0), 3)  # Reanudar movimiento
+            velocidad = round(random.uniform(1.0, 5.0), 3) 
 
-        # Actualizar el peso de la arista
         if graph.has_edge(posicion_inicial, nueva_posicion):
             data = graph.get_edge_data(posicion_inicial, nueva_posicion)
-            data['weight'] = velocidad  # Actualizar peso como velocidad
+            data['weight'] = velocidad 
 
         datos_simulacion.append({
             'paso': paso,
@@ -46,8 +42,7 @@ def simular_dinamica_particula(graph, ruta, velocidad_inicial=0.0, probabilidad_
             'energia_cinetica': energia_cinetica,
             'mostrar': False
         })
-
         posicion_inicial = nueva_posicion
-        time.sleep(1 / velocidad)  # Simular tiempo de movimiento
-
+        time.sleep(1 / velocidad)  
+        
     return graph, datos_simulacion
