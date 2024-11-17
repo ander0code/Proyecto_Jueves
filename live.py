@@ -14,11 +14,10 @@ import os
 import threading
 from pydub import AudioSegment
 
+# Funciones de audio
 def crear_audio_guia(shortest_path):
-
     audio_path = "guia.mp3"
     audio_rapido_path = "guia_rápida.mp3"
-
     for file_path in [audio_path, audio_rapido_path]:
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -29,10 +28,8 @@ def crear_audio_guia(shortest_path):
         texto_guia += f"{shortest_path[i]} a {shortest_path[i+1]}. "
     texto_guia += f"Llegada final en {shortest_path[-1]}. Gracias por usar nuestro sistema de guía."
 
-
     audio = gTTS(text=texto_guia, lang="es")
     audio.save(audio_path)
-
 
     audio = AudioSegment.from_mp3(audio_path)
     audio_rapido = audio.speedup(playback_speed=1.2)  
@@ -43,13 +40,13 @@ def crear_audio_guia(shortest_path):
 
 def reproducir_audio_guia():
     audio_path = os.path.abspath("guia_rápida.mp3")  
-
     try:
         print(f"Reproduciendo el archivo: {audio_path}")
         playsound(audio_path)  
     except Exception as e:
         print(f"Error al reproducir el audio: {e}")
 
+# Funciones para la simulación del grafo y la dinámica de la partícula
 def recalibrate_graph(graph, nodos_bloqueados):
     print("Recalibrando el grafo y buscando el camino más corto...")
     shortest_path = calcular_camino_mas_corto(graph, "Sala de Espera", "Recepción")
@@ -66,55 +63,14 @@ def recalibrate_graph(graph, nodos_bloqueados):
         )
     return graph, shortest_path, datos_simulacion
 
-def introducir_obstaculos(graph, probabilidad_de_obstaculo=0.1):
-    for nodo in list(graph.nodes()):
-        if random.random() < probabilidad_de_obstaculo and nodo != "Recepción":  
-            graph.remove_node(nodo)
-    return graph
-
-def plot_graph(graph, ax, shortest_path=None, datos_simulacion=None):
-    pos = nx.get_node_attributes(graph, 'pos')
-    ax.clear()  
-    nx.draw(graph, pos, with_labels=True, node_size=2000, node_color='lightblue', font_size=10, font_weight='bold', ax=ax)
-    
-    if datos_simulacion:
-        edge_labels = {}
-        for datos in datos_simulacion:
-            if datos['mostrar']:
-                edge_labels[(datos['posicion_inicial'], datos['nueva_posicion'])] = datos['velocidad']
-        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, ax=ax)
-    
-    if shortest_path:
-        path_edges = list(zip(shortest_path, shortest_path[1:]))
-        nx.draw_networkx_edges(graph, pos, edgelist=path_edges, edge_color='red', width=2)
-    
-    ax.set_title("Esquema del Grafo del Hospital")
-    plt.draw() 
-    plt.pause(0.1)  
-
-def bloquear_nodos(graph, nodos_bloqueados):
-    for nodo in nodos_bloqueados:
-        if nodo in graph and nodo != "Recepción":  
-            graph.remove_node(nodo)
-    return graph
-
-def desbloquear_nodos(graph, nodos_desbloqueados, posiciones_originales):
-    for nodo in nodos_desbloqueados:
-        if nodo not in graph:
-            graph.add_node(nodo, pos=posiciones_originales[nodo])
-    return graph
-
 def bloquear_nodos_aleatoriamente(graph, num_nodos, camino):
     nodos = list(graph.nodes())
     if "Recepción" in nodos:
         nodos.remove("Recepción")  
-    
     nodos_bloqueables = [nodo for nodo in nodos if nodo not in camino]
     nodos_bloqueados = random.sample(nodos_bloqueables, num_nodos) 
-    
     for nodo in nodos_bloqueados:
         graph.nodes[nodo]['color'] = 'orange' 
-    
     return graph, nodos_bloqueados
 
 def actualizar_grafico(num, graph, ax, camino, datos_simulacion):
@@ -167,39 +123,63 @@ def simular_movimiento(graph, camino, ax, datos_simulacion):
     hilo_audio.join()
     return anim
 
-def main():
-    plt.ion()  
-    fig, ax = plt.subplots(figsize=(15, 10))
+# Función para crear la ventana de tkinter
+def crear_ventana():
+    window = tk.Tk()
+    window.title("Simulador de Dinámica de Partículas - Hospital")
 
-    root = tk.Tk()
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-    root.withdraw()  
+    # Etiqueta de título
+    label_titulo = tk.Label(window, text="Simulador de Movimiento en el Hospital", font=("Helvetica", 16))
+    label_titulo.pack(pady=10)
 
-    window_width = 15 * 100  
-    window_height = 10 * 100  
-    position_x = (screen_width - window_width) // 2
-    position_y = (screen_height - window_height) // 2
+    # Etiqueta para ingresar la cantidad de nodos a bloquear
+    label_nodos = tk.Label(window, text="Número de nodos a bloquear:")
+    label_nodos.pack(pady=5)
 
-    fig.canvas.manager.window.wm_geometry(f"+{position_x}+{position_y}")
+    # Entrada para el número de nodos
+    entry_nodos = tk.Entry(window)
+    entry_nodos.pack(pady=5)
 
-    graph = Esquema_grafo_hospital()  
-    posiciones_originales = nx.get_node_attributes(graph, 'pos')
+    # Función para iniciar la simulación
+    def iniciar_simulacion():
+        try:
+            # Obtener el número de nodos a bloquear desde la entrada del usuario
+            num_nodos_a_bloquear = int(entry_nodos.get())
+            if num_nodos_a_bloquear < 1:
+                tk.messagebox.showerror("Error", "El número de nodos debe ser mayor que 0")
+                return
+            
+            plt.ion()  
+            fig, ax = plt.subplots(figsize=(15, 10))
 
-    nodos_bloqueados = [] 
-    graph, shortest_path, datos_simulacion = recalibrate_graph(graph, nodos_bloqueados)
+            # Generar el grafo y recalibrarlo
+            graph = Esquema_grafo_hospital()  
+            nodos_bloqueados = [] 
+            graph, shortest_path, datos_simulacion = recalibrate_graph(graph, nodos_bloqueados)
+
+            if shortest_path:
+                print(f"Camino más corto: {shortest_path}")
+                crear_audio_guia(shortest_path)
+
+                # Bloquear nodos aleatorios
+                graph, nodos_bloqueados = bloquear_nodos_aleatoriamente(graph, num_nodos_a_bloquear, shortest_path)
+
+                # Iniciar la simulación de movimiento
+                anim = simular_movimiento(graph, shortest_path, ax, datos_simulacion) 
+                
+                if datos_simulacion:
+                    mostrar_metricas(datos_simulacion)
+
+        except ValueError:
+            tk.messagebox.showerror("Error", "Por favor, ingrese un número válido de nodos.")
     
-    if shortest_path:
-        print(f"Camino más corto: {shortest_path}")
-        crear_audio_guia(shortest_path) 
+    # Botón para iniciar la simulación
+    button_iniciar = tk.Button(window, text="Iniciar Simulación", command=iniciar_simulacion, font=("Helvetica", 12))
+    button_iniciar.pack(pady=10)
 
-        num_nodos_a_bloquear = 5 
-        graph, nodos_bloqueados = bloquear_nodos_aleatoriamente(graph, num_nodos_a_bloquear, shortest_path)
+    # Iniciar la ventana
+    window.mainloop()
 
-        anim = simular_movimiento(graph, shortest_path, ax, datos_simulacion) 
-        
-        if datos_simulacion:
-            mostrar_metricas(datos_simulacion)
-
+# Llamada a la función de ventana
 if __name__ == "__main__":
-    main()
+    crear_ventana()

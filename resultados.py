@@ -2,47 +2,39 @@ import tkinter as tk
 from tkinter import ttk
 
 def mostrar_metricas(datos_simulacion):
-
+    # Crear la ventana de Tkinter
     ventana = tk.Tk()
-    ventana.title("Resultados de la Dinámica de la Partícula")
-    ventana.geometry("800x400")  
-    
-    frame = ttk.Frame(ventana)
-    frame.pack(fill=tk.BOTH, expand=True)
-    
-    columnas = ("paso", "posicion_inicial", "nueva_posicion", "distancia", "velocidad", "energia_cinetica")
-    tabla = ttk.Treeview(frame, columns=columnas, show="headings")
-    
-    tabla.heading("paso", text="Paso")
-    tabla.heading("posicion_inicial", text="Nodo Inicial")
-    tabla.heading("nueva_posicion", text="Nodo Final")
-    tabla.heading("distancia", text="Distancia")
-    tabla.heading("velocidad", text="Velocidad")
-    tabla.heading("energia_cinetica", text="Energía Cinética")
+    ventana.title("Métricas de la Simulación")
 
-    tabla.column("paso", width=50)
-    tabla.column("posicion_inicial", width=100)
-    tabla.column("nueva_posicion", width=100)
-    tabla.column("distancia", width=100)
-    tabla.column("velocidad", width=100)
-    tabla.column("energia_cinetica", width=120)
-    
-    for datos in datos_simulacion:
-        tabla.insert("", tk.END, values=(
-            datos["paso"],
-            datos["posicion_inicial"],
-            datos["nueva_posicion"],
-            round(datos["distancia"], 3),
-            datos["velocidad"],
-            round(datos["energia_cinetica"], 3),
-        ))
-    
-    scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tabla.yview)
-    tabla.configure(yscroll=scrollbar.set)
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    tabla.pack(fill=tk.BOTH, expand=True)
-    
-    boton_cerrar = ttk.Button(ventana, text="Cerrar", command=ventana.destroy)
-    boton_cerrar.pack(pady=10)
-    
+    # Crear el Treeview para mostrar los datos como una tabla
+    tabla = ttk.Treeview(ventana, columns=("Paso", "Posición Inicial", "Nueva Posición", "Distancia (m)", 
+                                           "Velocidad (m/s)", "Energía Cinética (J)", "Estado", "Tiempo (s)", 
+                                           "Distancia Recorrida (m)"), show="headings")
+
+    # Configurar las columnas
+    tabla.heading("Paso", text="Paso")
+    tabla.heading("Posición Inicial", text="Posición Inicial")
+    tabla.heading("Nueva Posición", text="Nueva Posición")
+    tabla.heading("Distancia (m)", text="Distancia (m)")
+    tabla.heading("Velocidad (m/s)", text="Velocidad (m/s)")
+    tabla.heading("Energía Cinética (J)", text="Energía Cinética (J)")
+    tabla.heading("Estado", text="Estado")
+    tabla.heading("Tiempo (s)", text="Tiempo (s)")
+    tabla.heading("Distancia Recorrida (m)", text="Distancia Recorrida (m)")
+
+    # Insertar los datos en la tabla
+    for data in datos_simulacion:
+        tabla.insert("", "end", values=(data["paso"], data["posicion_inicial"], data["nueva_posicion"], 
+                                       round(data["distancia"], 2), round(data["velocidad"], 2), 
+                                       round(data["energia_cinetica"], 2), data["Estado"], 
+                                       round(data["Tiempo (s)"], 2), round(data["Distancia Recorrida (m)"], 2)))
+
+    # Empacar la tabla
+    tabla.pack(fill="both", expand=True)
+
+    # Botón para cerrar la ventana
+    btn_cerrar = tk.Button(ventana, text="Cerrar", command=ventana.quit)
+    btn_cerrar.pack()
+
+    # Mostrar la ventana
     ventana.mainloop()
