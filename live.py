@@ -15,29 +15,27 @@ import threading
 from pydub import AudioSegment
 
 def crear_audio_guia(shortest_path):
-    # Definir los nombres de los archivos de audio
+
     audio_path = "guia.mp3"
     audio_rapido_path = "guia_rápida.mp3"
 
-    # Eliminar archivos existentes si ya existen
     for file_path in [audio_path, audio_rapido_path]:
         if os.path.exists(file_path):
             os.remove(file_path)
             print(f"Archivo eliminado: {file_path}")
 
-    # Crear un texto optimizado para las instrucciones
     texto_guia = "Siga estas indicaciones: "
     for i in range(len(shortest_path) - 1):
         texto_guia += f"{shortest_path[i]} a {shortest_path[i+1]}. "
     texto_guia += f"Llegada final en {shortest_path[-1]}. Gracias por usar nuestro sistema de guía."
 
-    # Crear el audio usando gTTS
+
     audio = gTTS(text=texto_guia, lang="es")
     audio.save(audio_path)
 
-    # Usar pydub para modificar la velocidad del audio
+
     audio = AudioSegment.from_mp3(audio_path)
-    audio_rapido = audio.speedup(playback_speed=1.2)  # Incremento del 30%
+    audio_rapido = audio.speedup(playback_speed=1.2)  
     audio_rapido.export(audio_rapido_path, format="mp3")
 
     print("El archivo de audio rápido 'guia_rápida.mp3' se ha creado correctamente.")
@@ -154,7 +152,7 @@ def actualizar_grafico(num, graph, ax, camino, datos_simulacion):
     plt.pause(0.1)  
 
 def simular_movimiento(graph, camino, ax, datos_simulacion):
-    hilo_audio = threading.Thread(target=reproducir_audio_guia)  # Ajustado para usar guia_rápida.mp3
+    hilo_audio = threading.Thread(target=reproducir_audio_guia)  
     hilo_audio.start()
 
     anim = animation.FuncAnimation(
@@ -162,7 +160,7 @@ def simular_movimiento(graph, camino, ax, datos_simulacion):
         actualizar_grafico,
         frames=len(camino) + 1,
         fargs=(graph, ax, camino, datos_simulacion),
-        interval=2000,
+        interval=2500,
         repeat=False
     )
     plt.show(block=True) 
